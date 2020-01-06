@@ -27,8 +27,11 @@ SUDO            ::= $(shell which sudo)
 
 default: ${MOD_NAME}.${libsuffix}
 
-mysql.so: mysql.c makefile
-	$(MKSO) $(CFLAGS) $(LDFLAGS) -o $@ mysql.c
+mysql.o: src/cmodules/mysql.c makefile
+	@$(CC) $(CFLAGS)  -o $@ -c $<
+	@$(MSG) CC "(MYSQL)" $@
+mysql.so: mysql.o
+	$(MKSO) $(LDFLAGS) -o $@ mysql.o ${LDFLAGS}
 	@$(MSG) MKSO  $@ $<
 	@ln -sf $(@F) $(@D)/$(@F).${KNO_MAJOR}
 mysql.dylib: mysql.c makefile

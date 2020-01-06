@@ -29,8 +29,6 @@
 #include <mysql/errmsg.h>
 #include <mysql/mysqld_error.h>
 
-extern my_bool my_init(void);
-
 static lispval ssl_symbol, sslca_symbol, sslcert_symbol, sslkey_symbol, sslcadir_symbol;
 static lispval sslciphers_symbol, port_symbol, reconnect_symbol;
 static lispval timeout_symbol, connect_timeout_symbol;
@@ -1449,14 +1447,14 @@ static long long int mysql_initialized = 0;
 
 static struct KNO_SQLDB_HANDLER mysql_handler=
   {"mysql",NULL,NULL,NULL,NULL};
-
 int first_call = 1;
 
 static int init_thread_for_mysql()
 {
   u8_log(LOG_DEBUG,"MYSQL","Initializing thread for MYSQL");
   if (first_call) {
-    first_call = 0; my_init();}
+    first_call = 0;
+    mysql_init();}
   else mysql_thread_init();
   return 1;
 }
