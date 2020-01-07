@@ -1454,8 +1454,8 @@ static int init_thread_for_mysql()
   u8_log(LOG_DEBUG,"MYSQL","Initializing thread for MYSQL");
   if (first_call) {
     first_call = 0;
-    mysql_init();}
-  else mysql_thread_init();
+    mysql_library_init(0,NULL,NULL);}
+  mysql_thread_init();
   return 1;
 }
 
