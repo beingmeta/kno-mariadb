@@ -69,7 +69,7 @@ debian/changelog: makefile mysql.c \
 		  debian/rules debian/control debian/changelog.base
 	cat debian/changelog.base | etc/gitchangelog kno-mysql > $@
 
-debian.built: mysql.c makefile mysql/*.c mysql/*.h \
+debian.built: mysql.c makefile \
 		debian/rules debian/control debian/changelog
 	dpkg-buildpackage -sa -us -uc -b -rfakeroot && \
 	touch $@
