@@ -83,6 +83,9 @@ debian.updated: debian.signed
 
 update-apt: debian.updated
 
+debinstall: debian.signed
+	${SUDO} dpkg -i ../kno-mysql*.deb
+
 debclean:
 	rm -f ../kno-mysql_* ../kno-mysql-* debian/changelog
 

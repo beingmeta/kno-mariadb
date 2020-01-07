@@ -9,7 +9,6 @@ Homepage: http://www.beingmeta.com/
 Package: kno-mysql
 Section: libdevel
 Architecture: any
-Depends: kno-core, mysqlclient
-Conflicts: kno-sundown
-Description: Sundown module for KNO
+Depends: kno-core, libmysqlclient21
+Description: MYSQL module for KNO
 
