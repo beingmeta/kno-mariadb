@@ -22,8 +22,8 @@ MOD_NAME	::= mysql
 MOD_RELEASE     ::= $(shell cat etc/release)
 MOD_VERSION	::= ${KNO_MAJOR}.${KNO_MINOR}.${MOD_RELEASE}
 
-GPGID           ::= FE1BC737F9F323D732AA26330620266BE5AFF294
-SUDO            ::= $(shell which sudo)
+GPGID = FE1BC737F9F323D732AA26330620266BE5AFF294
+SUDO  = $(shell which sudo)
 
 default: ${MOD_NAME}.${libsuffix}
 
@@ -45,18 +45,18 @@ TAGS: mysql.c
 	etags -o TAGS mysql.c
 
 install:
-	@${SYSINSTALL} ${MOD_NAME}.${libsuffix} ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
+	@${SUDO} ${SYSINSTALL} ${MOD_NAME}.${libsuffix} ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
 	@echo === Installed ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
-	@ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR}
+	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR}
 	@echo === Linked ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR} to ${MOD_NAME}.so.${MOD_VERSION}
-	@ln -sf ${MOD_NAME}.so.${MOD_VERSION} \
+	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} \
 			${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}
 	@echo === Linked ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR} to ${MOD_NAME}.so.${MOD_VERSION}
-	@ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so
+	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so
 	@echo === Linked ${CMODULES}/${MOD_NAME}.so to ${MOD_NAME}.so.${MOD_VERSION}
 
 suinstall doinstall:
-	sudo make pkginstall
+	sudo make install
 
 clean:
 	rm -f *.o *.${libsuffix}
@@ -78,22 +78,22 @@ debian/changelog: debian mysql.c makefile
 	  mv debian/changelog.tmp debian/changelog; \
 	else rm debian/changelog.tmp; fi
 
-debian.built: mysql.c makefile debian debian/changelog
+dist/debian.built: mysql.c makefile debian debian/changelog
 	dpkg-buildpackage -sa -us -uc -b -rfakeroot && \
 	touch $@
 
-debian.signed: debian.built
+dist/debian.signed: dist/debian.built
 	debsign --re-sign -k${GPGID} ../kno-mysql_*.changes && \
 	touch $@
 
-dpkg dpkgs: debian.signed
-
-debian.updated: debian.signed
+dist/debian.updated: dist/debian.signed
 	dupload -c ./debian/dupload.conf --nomail --to bionic ../kno-mysql_*.changes && touch $@
 
-update-apt: debian.updated
+dpkg dpkgs: dist/debian.signed
 
-debinstall: debian.signed
+update-apt: dist/debian.updated
+
+debinstall: dist/debian.signed
 	${SUDO} dpkg -i ../kno-mysql*.deb
 
 debclean:
@@ -101,4 +101,4 @@ debclean:
 
 debfresh:
 	make debclean
-	make debian.built
+	make dist/debian.built
