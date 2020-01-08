@@ -97,7 +97,7 @@ update-apt: dist/debian.updated
 debinstall: dist/debian.signed
 	${SUDO} dpkg -i ../kno-mysql*.deb
 
-debclean:
+debclean: clean
 	rm -rf ../kno-mysql_* ../kno-mysql-* debian dist/debian.*
 
 debfresh:
