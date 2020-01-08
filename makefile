@@ -26,6 +26,7 @@ GPGID = FE1BC737F9F323D732AA26330620266BE5AFF294
 SUDO  = $(shell which sudo)
 
 default: ${MOD_NAME}.${libsuffix}
+build: ${MOD_NAME}.${libsuffix}
 
 mysql.o: mysql.c makefile
 	@$(CC) $(CFLAGS) -o $@ -c $<
@@ -44,7 +45,7 @@ mysql.dylib: mysql.c makefile
 TAGS: mysql.c
 	etags -o TAGS mysql.c
 
-install:
+install: build
 	@${SUDO} ${SYSINSTALL} ${MOD_NAME}.${libsuffix} ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
 	@echo === Installed ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
 	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR}
