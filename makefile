@@ -97,7 +97,7 @@ debinstall: dist/debian.signed
 	${SUDO} dpkg -i ../kno-mysql*.deb
 
 debclean:
-	rm -f ../kno-mysql_* ../kno-mysql-* debian/changelog
+	rm -rf ../kno-mysql_* ../kno-mysql-* debian
 
 debfresh:
 	make debclean
