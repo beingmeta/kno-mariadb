@@ -45,19 +45,18 @@ TAGS: mysql.c
 	etags -o TAGS mysql.c
 
 install:
-	@${SUDO} ${SYSINSTALL} ${MOD_NAME}.${libsuffix} \
-			${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
+	@${SYSINSTALL} ${MOD_NAME}.${libsuffix} ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
 	@echo === Installed ${CMODULES}/${MOD_NAME}.so.${MOD_VERSION}
-	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} \
-			${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR}
-	@echo === Linked ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR} \
-		to ${MOD_NAME}.so.${MOD_VERSION}
-	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} \
+	@ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR}
+	@echo === Linked ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}.${KNO_MINOR} to ${MOD_NAME}.so.${MOD_VERSION}
+	@ln -sf ${MOD_NAME}.so.${MOD_VERSION} \
 			${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR}
-	@echo === Linked ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR} \
-		to ${MOD_NAME}.so.${MOD_VERSION}
-	@${SUDO} ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so
+	@echo === Linked ${CMODULES}/${MOD_NAME}.so.${KNO_MAJOR} to ${MOD_NAME}.so.${MOD_VERSION}
+	@ln -sf ${MOD_NAME}.so.${MOD_VERSION} ${CMODULES}/${MOD_NAME}.so
 	@echo === Linked ${CMODULES}/${MOD_NAME}.so to ${MOD_NAME}.so.${MOD_VERSION}
+
+suinstall doinstall:
+	sudo make pkginstall
 
 clean:
 	rm -f *.o *.${libsuffix}
@@ -73,7 +72,9 @@ debian: mysql.c makefile \
 
 debian/changelog: debian mysql.c makefile
 	cat debian/changelog.base | etc/gitchangelog kno-mysql > $@.tmp
-	if diff debian/changelog debian/changelog.tmp 2>&1 > /dev/null; then \
+	if test ! -f debian/changelog; then \
+	  mv debian/changelog.tmp debian/changelog; \
+	elif diff debian/changelog debian/changelog.tmp 2>&1 > /dev/null; then \
 	  mv debian/changelog.tmp debian/changelog; \
 	else rm debian/changelog.tmp; fi
 
