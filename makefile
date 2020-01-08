@@ -70,10 +70,12 @@ debian: mysql.c makefile \
 	dist/debian/changelog.base
 	rm -rf debian
 	cp -r dist/debian debian
-	cat debian/changelog.base | etc/gitchangelog kno-mysql > debian/changelog
 
 debian/changelog: debian mysql.c makefile
-	cat debian/changelog.base | etc/gitchangelog kno-mysql > $@
+	cat debian/changelog.base | etc/gitchangelog kno-mysql > $@.tmp
+	if diff debian/changelog debian/changelog.tmp 2>&1 > /dev/null; then \
+	  mv debian/changelog.tmp debian/changelog; \
+	else rm debian/changelog.tmp; fi
 
 debian.built: mysql.c makefile debian debian/changelog
 	dpkg-buildpackage -sa -us -uc -b -rfakeroot && \
