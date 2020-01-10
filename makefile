@@ -88,7 +88,7 @@ dist/debian.signed: dist/debian.built
 	touch $@
 
 dist/debian.updated: dist/debian.signed
-	dupload -c ./debian/dupload.conf --nomail --to bionic ../kno-mysql_*.changes && touch $@
+	dupload -c ./dist/dupload.conf --nomail --to bionic ../kno-mysql_*.changes && touch $@
 
 deb debs dpkg dpkgs: dist/debian.signed
 
