@@ -1,18 +1,19 @@
-prefix		::= $(shell knoconfig prefix)
-libsuffix	::= $(shell knoconfig libsuffix)
-KNO_CFLAGS	::= -I. -fPIC $(shell knoconfig cflags)
-KNO_LDFLAGS	::= -fPIC $(shell knoconfig ldflags)
+KNOCONFIG       ::= knoconfig
+prefix		::= $(shell ${KNOCONFIG} prefix)
+libsuffix	::= $(shell ${KNOCONFIG} libsuffix)
+KNO_CFLAGS	::= -I. -fPIC $(shell ${KNOCONFIG} cflags)
+KNO_LDFLAGS	::= -fPIC $(shell ${KNOCONFIG} ldflags)
 MYSQL_CFLAGS    ::= $(shell etc/pkc --cflags mysqlclient)
 MYSQL_LDFLAGS   ::= $(shell etc/pkc --libs mysqlclient)
 CFLAGS		::= ${CFLAGS} ${MYSQL_CFLAGS} ${KNO_CFLAGS} 
 LDFLAGS		::= ${LDFLAGS} ${MYSQL_LDFLAGS} ${KNO_LDFLAGS}
-CMODULES	::= $(DESTDIR)$(shell knoconfig cmodules)
-LIBS		::= $(shell knoconfig libs)
-LIB		::= $(shell knoconfig lib)
-INCLUDE		::= $(shell knoconfig include)
-KNO_VERSION	::= $(shell knoconfig version)
-KNO_MAJOR	::= $(shell knoconfig major)
-KNO_MINOR	::= $(shell knoconfig minor)
+CMODULES	::= $(DESTDIR)$(shell ${KNOCONFIG} cmodules)
+LIBS		::= $(shell ${KNOCONFIG} libs)
+LIB		::= $(shell ${KNOCONFIG} lib)
+INCLUDE		::= $(shell ${KNOCONFIG} include)
+KNO_VERSION	::= $(shell ${KNOCONFIG} version)
+KNO_MAJOR	::= $(shell ${KNOCONFIG} major)
+KNO_MINOR	::= $(shell ${KNOCONFIG} minor)
 PKG_RELEASE	::= $(cat ./etc/release)
 DPKG_NAME	::= $(shell ./etc/dpkgname)
 MKSO		::= $(CC) -shared $(CFLAGS) $(LDFLAGS) $(LIBS)
@@ -33,6 +34,7 @@ mysql.o: mysql.c makefile
 	@$(MSG) CC "(MYSQL)" $@
 mysql.so: mysql.o
 	$(MKSO) $(LDFLAGS) -o $@ mysql.o ${LDFLAGS}
+	@if test ! -z "${COPY_CMODS}"; then cp $@ ${COPY_CMODS}; fi;
 	@$(MSG) MKSO  $@ $<
 	@ln -sf $(@F) $(@D)/$(@F).${KNO_MAJOR}
 mysql.dylib: mysql.c makefile
@@ -40,6 +42,7 @@ mysql.dylib: mysql.c makefile
 		`basename $(@F) .dylib`.${KNO_MAJOR}.dylib \
 		${CFLAGS} ${LDFLAGS} -o $@ $(DYLIB_FLAGS) \
 		mysql.c
+	@if test ! -z "${COPY_CMODS}"; then cp $@ ${COPY_CMODS}; fi;
 	@$(MSG) MACLIBTOOL  $@ $<
 
 TAGS: mysql.c
