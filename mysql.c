@@ -915,7 +915,11 @@ static lispval mysqlmakeproc
   /* Set up fields for the function object itself */
   dbproc->fcn_filename = dbproc->sqldb_spec;
   dbproc->fcn_name = dbproc->sqldb_qtext;
+#ifdef KNO_CALL_XCALL
+  dbproc->fcn_call = KNO_CALL_XCALL | KNO_CALL_NOTAIL;
+#else
   dbproc->fcn_call = KNO_FCN_CALL_XCALL | KNO_FCN_CALL_NOTAIL;
+#endif
   dbproc->fcn_call_width = dbproc->fcn_arity = -1;
   dbproc->fcn_min_arity = 0;
   dbproc->fcn_handler.xcalln = callmysqlproc;
