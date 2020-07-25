@@ -50,15 +50,14 @@ mysql.o: mysql.c makefile
 	@$(MSG) CC "(MYSQL)" $@
 mysql.so: mysql.o
 	$(MKSO) $(LDFLAGS) -o $@ mysql.o ${LDFLAGS}
-	@if test ! -z "${COPY_CMODS}"; then cp $@ ${COPY_CMODS}; fi;
 	@$(MSG) MKSO  $@ $<
 	@ln -sf $(@F) $(@D)/$(@F).${KNO_MAJOR}
+
 mysql.dylib: mysql.c makefile
 	@$(MACLIBTOOL) -install_name \
 		`basename $(@F) .dylib`.${KNO_MAJOR}.dylib \
 		${CFLAGS} ${LDFLAGS} -o $@ $(DYLIB_FLAGS) \
 		mysql.c
-	@if test ! -z "${COPY_CMODS}"; then cp $@ ${COPY_CMODS}; fi;
 	@$(MSG) MACLIBTOOL  $@ $<
 
 TAGS: mysql.c
@@ -79,6 +78,12 @@ install: build ${CMODULES}
 	@echo === Linked ${CMODULES}/${PKG_NAME}.so.${KNO_MAJOR} to ${PKG_NAME}.so.${FULL_VERSION}
 	@${SUDO} ln -sf ${PKG_NAME}.so.${FULL_VERSION} ${CMODULES}/${PKG_NAME}.so
 	@echo === Linked ${CMODULES}/${PKG_NAME}.so to ${PKG_NAME}.so.${FULL_VERSION}
+
+embed-install update: ${PKG_NAME}.${libsuffix}
+	@if test -d ../../../lib/kno; then \
+	  cp ${PKG_NAME}.${libsuffix} ../../../lib/kno; \
+	  echo "Updated $(abspath ../../../lib/kno/${PKG_NAME}.${libsuffix})"; \
+	else echo "Not embedded in KNO build"; fi
 
 suinstall doinstall:
 	sudo make install
