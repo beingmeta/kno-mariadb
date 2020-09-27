@@ -5,6 +5,7 @@ prefix		::= $(shell ${KNOCONFIG} prefix)
 libsuffix	::= $(shell ${KNOCONFIG} libsuffix)
 KNO_CFLAGS	::= -I. -fPIC $(shell ${KNOCONFIG} cflags)
 KNO_LDFLAGS	::= -fPIC $(shell ${KNOCONFIG} ldflags)
+KNO_LIBS	::= $(shell ${KNOCONFIG} libs)
 MYSQL_CFLAGS    ::= $(shell etc/pkc --cflags mysqlclient)
 MYSQL_LDFLAGS   ::= $(shell etc/pkc --libs mysqlclient)
 INIT_CFLAGS     ::= ${CFLAGS}
