@@ -6,8 +6,8 @@ libsuffix	::= $(shell ${KNOCONFIG} libsuffix)
 KNO_CFLAGS	::= -I. -fPIC $(shell ${KNOCONFIG} cflags)
 KNO_LDFLAGS	::= -fPIC $(shell ${KNOCONFIG} ldflags)
 KNO_LIBS	::= $(shell ${KNOCONFIG} libs)
-MYSQL_CFLAGS    ::= $(shell etc/pkc --cflags mysqlclient)
-MYSQL_LDFLAGS   ::= $(shell etc/pkc --libs mysqlclient)
+MARIADB_CFLAGS    ::= $(shell etc/pkc --cflags mariadb)
+MARIADB_LDFLAGS   ::= $(shell etc/pkc --libs mariadb)
 INIT_CFLAGS     ::= ${CFLAGS}
 INIT_LDFLAGS    ::= ${LDFLAGS}
 CMODULES	::= $(DESTDIR)$(shell ${KNOCONFIG} cmodules)
@@ -23,13 +23,13 @@ FULL_VERSION    ::= ${KNO_MAJOR}.${KNO_MINOR}.${PKG_VERSION}
 PATCHLEVEL      ::= $(shell u8_gitpatchcount ./version)
 PATCH_VERSION   ::= ${FULL_VERSION}-${PATCHLEVEL}
 
-PKG_NAME	::= mysql
+PKG_NAME	::= mariadb
 DPKG_NAME	::= ${PKG_NAME}_${PATCH_VERSION}
 
 SUDO            ::= $(shell which sudo)
 
-CFLAGS		  = ${INIT_CFLAGS} ${MYSQL_CFLAGS} ${KNO_CFLAGS} 
-LDFLAGS		  = ${INIT_LDFLAGS} ${MYSQL_LDFLAGS} ${KNO_LDFLAGS}
+CFLAGS		  = ${INIT_CFLAGS} ${MARIADB_CFLAGS} ${KNO_CFLAGS} 
+LDFLAGS		  = ${INIT_LDFLAGS} ${MARIADB_LDFLAGS} ${KNO_LDFLAGS}
 MKSO		  = $(CC) -shared $(CFLAGS) $(LDFLAGS) $(LIBS)
 MSG		  = echo
 SYSINSTALL        = /usr/bin/install -c
@@ -48,23 +48,23 @@ APK_ARCH_DIR      = ${APKREPO}/staging/${ARCH}
 default: ${PKG_NAME}.${libsuffix}
 build: ${PKG_NAME}.${libsuffix}
 
-mysql.o: mysql.c makefile
+mariadb.o: mariadb.c makefile
 	@$(CC) $(CFLAGS) -o $@ -c $<
-	@$(MSG) CC "(MYSQL)" $@
-mysql.so: mysql.o
-	$(MKSO) $(LDFLAGS) -o $@ mysql.o ${LDFLAGS}
+	@$(MSG) CC "(MARIADB)" $@
+mariadb.so: mariadb.o
+	$(MKSO) $(LDFLAGS) -o $@ mariadb.o ${LDFLAGS}
 	@$(MSG) MKSO  $@ $<
 	@ln -sf $(@F) $(@D)/$(@F).${KNO_MAJOR}
 
-mysql.dylib: mysql.c makefile
+mariadb.dylib: mariadb.c makefile
 	@$(MACLIBTOOL) -install_name \
 		`basename $(@F) .dylib`.${KNO_MAJOR}.dylib \
 		${CFLAGS} ${LDFLAGS} -o $@ $(DYLIB_FLAGS) \
-		mysql.c
+		mariadb.c
 	@$(MSG) MACLIBTOOL  $@ $<
 
-TAGS: mysql.c
-	etags -o TAGS mysql.c
+TAGS: mariadb.c
+	etags -o TAGS mariadb.c
 
 ${CMODULES}:
 	install -d $@
@@ -94,17 +94,17 @@ gitup gitup-trunk:
 
 DEBFILES=changelog.base compat control copyright dirs docs install
 
-debian: mysql.c makefile \
+debian: mariadb.c makefile \
 	dist/debian/rules dist/debian/control \
 	dist/debian/changelog.base
 	rm -rf debian
 	cp -r dist/debian debian
 	cd debian; chmod a-x ${DEBFILES}
 
-debian/changelog: debian mysql.c makefile
+debian/changelog: debian mariadb.c makefile
 	cat debian/changelog.base | \
-		knobuild debchangelog kno-${PKG_NAME} ${CODENAME} \
-			${REL_BRANCH} ${REL_STATUS} ${REL_PRIORITY} \
+		u8_debchangelog kno-${PKG_NAME} ${CODENAME} \
+			${REL_BRANCH} ${PATCH_VERSION} ${REL_STATUS} ${REL_PRIORITY} \
 	    > $@.tmp
 	if test ! -f debian/changelog; then \
 	  mv debian/changelog.tmp debian/changelog; \
@@ -112,26 +112,26 @@ debian/changelog: debian mysql.c makefile
 	  mv debian/changelog.tmp debian/changelog; \
 	else rm debian/changelog.tmp; fi
 
-dist/debian.built: mysql.c makefile debian debian/changelog
+dist/debian.built: mariadb.c makefile debian debian/changelog
 	dpkg-buildpackage -sa -us -uc -b -rfakeroot && \
 	touch $@
 
 dist/debian.signed: dist/debian.built
-	debsign --re-sign -k${GPGID} ../kno-mysql_*.changes && \
+	debsign --re-sign -k${GPGID} ../kno-mariadb_*.changes && \
 	touch $@
 
 dist/debian.updated: dist/debian.signed
-	dupload -c ./dist/dupload.conf --nomail --to bionic ../kno-mysql_*.changes && touch $@
+	dupload -c ./dist/dupload.conf --nomail --to bionic ../kno-mariadb_*.changes && touch $@
 
 deb debs dpkg dpkgs: dist/debian.signed
 
 update-apt: dist/debian.updated
 
 debinstall: dist/debian.signed
-	${SUDO} dpkg -i ../kno-mysql*.deb
+	${SUDO} dpkg -i ../kno-mariadb*.deb
 
 debclean: clean
-	rm -rf ../kno-mysql_* ../kno-mysql-* debian dist/debian.*
+	rm -rf ../kno-mariadb_* ../kno-mariadb-* debian dist/debian.*
 
 debfresh:
 	make debclean

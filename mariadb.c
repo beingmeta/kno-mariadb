@@ -1,7 +1,7 @@
 /* -*- Mode: C; Character-encoding: utf-8; -*- */
 
-/* mysql.c
-   This implements Kno bindings to mysql.
+/* mariadb.c
+   This implements Kno bindings to mariadb.
    Copyright (C) 2007-2019 beingmeta, inc.
 */
 
@@ -25,9 +25,9 @@
 #include <libu8/u8timefns.h>
 #include <libu8/u8crypto.h>
 
-#include <mysql/mysql.h>
-#include <mysql/errmsg.h>
-#include <mysql/mysqld_error.h>
+#include <mariadb/mysql.h>
+#include <mariadb/errmsg.h>
+#include <mariadb/mysqld_error.h>
 
 static lispval ssl_symbol, sslca_symbol, sslcert_symbol, sslkey_symbol, sslcadir_symbol;
 static lispval sslciphers_symbol, port_symbol, reconnect_symbol;
@@ -40,10 +40,6 @@ u8_condition UnusedType=_("MYSQL unused parameter type");
 
 #ifndef ER_NORMAL_SHUTDOWN
 #define ER_NORMAL_SHUTDOWN ER_NORMAL_SERVER_SHUTDOWN
-#endif
-
-#if MYSQL_VERSION_ID > 80000
-typedef bool my_bool;
 #endif
 
 static u8_string dupstring(lispval x)
@@ -86,7 +82,7 @@ static int restart_wait = MYSQL_RESTART_WAIT;
 
 static u8_mutex mysql_connect_lock;
 
-KNO_EXPORT int kno_init_mysql(void) KNO_LIBINIT_FN;
+KNO_EXPORT int kno_init_mariadb(void) KNO_LIBINIT_FN;
 static struct KNO_SQLDB_HANDLER mysql_handler;
 static lispval callmysqlproc(kno_stack stack,kno_function fn,
 			     int n,kno_argvec args);
@@ -195,15 +191,15 @@ static int setup_connection(struct KNO_MYSQL *dbp)
 	  (KNO_VOIDP(sslkey))&&(KNO_VOIDP(sslcadir))&&
 	  (KNO_VOIDP(sslciphers)))) {
       if (!((KNO_VOIDP(sslca))||(KNO_STRINGP(sslca))))
-	return kno_type_error("SSLCA","open_mysql",sslca);
+	return kno_type_error("SSLCA","mariadb_open",sslca);
       else if (!((KNO_VOIDP(sslcert))||(KNO_STRINGP(sslcert))))
-	return kno_type_error("SSLCERT","open_mysql",sslcert);
+	return kno_type_error("SSLCERT","mariadb_open",sslcert);
       else if (!((KNO_VOIDP(sslkey))||(KNO_STRINGP(sslkey))))
-	return kno_type_error("SSLKEY","open_mysql",sslkey);
+	return kno_type_error("SSLKEY","mariadb_open",sslkey);
       else if (!((KNO_VOIDP(sslcadir))||(KNO_STRINGP(sslcadir))))
-	return kno_type_error("SSLCADIR","open_mysql",sslcadir);
+	return kno_type_error("SSLCADIR","mariadb_open",sslcadir);
       else if (!((KNO_VOIDP(sslciphers))||(KNO_STRINGP(sslciphers))))
-	return kno_type_error("SSLCIPHERS","open_mysql",sslciphers);
+	return kno_type_error("SSLCIPHERS","mariadb_open",sslciphers);
       else retval = mysql_ssl_set
 	     (dbp->mysqldb,
 	      ((KNO_VOIDP(sslkey))?(NULL):(KNO_CSTRING(sslkey))),
@@ -233,7 +229,7 @@ static int setup_connection(struct KNO_MYSQL *dbp)
 
   if (retval!=RETVAL_OK) {
     const char *errmsg = mysql_error(&(dbp->_mysqldb)); kno_incref(options);
-    kno_seterr(MySQL_Error,"open_mysql/setup_connection",errmsg,options);}
+    kno_seterr(MySQL_Error,"mariadb_open/setup_connection",errmsg,options);}
   return retval;
 }
 
@@ -249,7 +245,7 @@ static int restart_connection(struct KNO_MYSQL *dbp)
 	 dbp->mysql_portno,dbp->mysql_sockname,dbp->mysql_flags);
       u8_unlock_mutex(&mysql_connect_lock);}
     if ((db == NULL)&&(mysql_errno(dbp->mysqldb) == CR_ALREADY_CONNECTED)) {
-      u8_log(LOG_WARN,"mysql/restart_connection",
+      u8_log(LOG_WARN,"mariadb/restart_connection",
 	     "Already connected to %s (%s) with id=%d/%d",
 	     dbp->sqldb_spec,dbp->sqldb_info,
 	     dbp->mysql_thread_id,
@@ -263,7 +259,7 @@ static int restart_connection(struct KNO_MYSQL *dbp)
   if (!(db)) {
     const char *msg = mysql_error(db); int err = mysql_errno(dbp->mysqldb);
     lispval conn = (lispval) dbp; kno_incref(conn);
-    u8_log(LOG_CRIT,"mysql/reconnect",
+    u8_log(LOG_CRIT,"mariadb/reconnect",
 	   "Failed after %ds to reconnect to MYSQL %s (%s), final err %s (%d)",
 	   waited,dbp->sqldb_spec,dbp->sqldb_info,msg,err);
     kno_seterr(MySQL_Error,"restart_connection",msg,conn);
@@ -271,7 +267,7 @@ static int restart_connection(struct KNO_MYSQL *dbp)
   else {
     int i = 0, n = dbp->sqldb_n_procs;
     struct KNO_MYSQL_PROC **procs = (KNO_MYSQL_PROC **)dbp->sqlprocs;
-    u8_log(LOG_WARN,"mysql/reconnect",
+    u8_log(LOG_WARN,"mariadb/reconnect",
 	   "Took %ds to reconnect to MYSQL %s (%s), thread_id=%d",
 	   waited,dbp->sqldb_spec,dbp->sqldb_info,dbp->mysql_thread_id);
     dbp->mysql_thread_id = thread_id = mysql_thread_id(db);
@@ -308,11 +304,11 @@ static int open_connection(struct KNO_MYSQL *dbp)
   dbp->mysqldb = mysql_init(&(dbp->_mysqldb));
   if ((dbp->mysqldb) == NULL) {
     const char *errmsg = mysql_error(&(dbp->_mysqldb));
-    u8_seterr(MySQL_Error,"mysql/open_connection",u8_strdup(errmsg));
+    u8_seterr(MySQL_Error,"mariadb/open_connection",u8_strdup(errmsg));
     return -1;}
   if (retval) {
     const char *errmsg = mysql_error(&(dbp->_mysqldb));
-    u8_seterr(MySQL_Error,"mysql/open_connection",u8_strdup(errmsg));
+    u8_seterr(MySQL_Error,"mariadb/open_connection",u8_strdup(errmsg));
     mysql_close(dbp->mysqldb);
     u8_free(dbp);
     return -1;}
@@ -332,7 +328,7 @@ static int open_connection(struct KNO_MYSQL *dbp)
 
   if (db == NULL) {
     const char *errmsg = mysql_error(&(dbp->_mysqldb));
-    u8_seterr(MySQL_Error,"mysql/open_connection",u8_strdup(errmsg));
+    u8_seterr(MySQL_Error,"mariadb/open_connection",u8_strdup(errmsg));
     return -1;}
   else dbp->mysqldb = db;
   dbp->mysql_restart_count = 0;
@@ -366,10 +362,10 @@ static void recycle_mysqldb(struct KNO_SQLDB *c)
   mysql_close(dbp->mysqldb);
 }
 
-DEFPRIM2("mysql/refresh",refresh_mysqldb,KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
-	 "`(MYSQL/REFRESH *dbptr* *flags*)` **undocumented**",
+DEFPRIM2("mariadb/refresh",mariadb_refresh,KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
+	 "`(MARIADB/REFRESH *dbptr* *flags*)` **undocumented**",
 	 kno_sqldb_type,KNO_VOID,kno_any_type,KNO_VOID);
-static lispval refresh_mysqldb(lispval c,lispval flags)
+static lispval mariadb_refresh(lispval c,lispval flags)
 {
   struct KNO_MYSQL *dbp = (struct KNO_MYSQL *)c;
 
@@ -378,7 +374,7 @@ static lispval refresh_mysqldb(lispval c,lispval flags)
 			     REFRESH_STATUS|REFRESH_THREADS);
   if (retval) {
     const char *errmsg = mysql_error(&(dbp->_mysqldb));
-    return kno_err(MySQL_Error,"mysql/refresh",(u8_string)errmsg,((lispval)c));}
+    return kno_err(MySQL_Error,"mariadb/refresh",(u8_string)errmsg,((lispval)c));}
   else return KNO_VOID;
 }
 
@@ -387,12 +383,12 @@ static lispval refresh_mysqldb(lispval c,lispval flags)
 /* Everything but the hostname and dbname is optional.
    In theory, we could have the dbname be optional, but for now we'll
    require it.  */
-DEFPRIM6("mysql/open",open_mysql,KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
-	 "`(MYSQL/OPEN *host* *dbname* *colmap* *user* *pass* *opts*)` **undocumented**",
+DEFPRIM6("mariadb/open",mariadb_open,KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
+	 "`(MARIADB/OPEN *host* *dbname* *colmap* *user* *pass* *opts*)` **undocumented**",
 	 kno_string_type,KNO_VOID,kno_string_type,KNO_VOID,
 	 kno_any_type,KNO_VOID,kno_string_type,KNO_VOID,
 	 kno_any_type,KNO_VOID,kno_any_type,KNO_VOID);
-static lispval open_mysql
+static lispval mariadb_open
 (lispval hostname,lispval dbname,lispval colinfo,
  lispval user,lispval password,
  lispval options)
@@ -401,7 +397,7 @@ static lispval open_mysql
   int portno = 0, flags = 0, retval;
   struct KNO_MYSQL *dbp = NULL;
   if (!((KNO_STRINGP(password))||(KNO_TYPEP(password,kno_secret_type))))
-    return kno_type_error("string/secret","open_mysql",password);
+    return kno_type_error("string/secret","mariadb_open",password);
   else dbp = u8_alloc(struct KNO_MYSQL);
 
   /* Initialize the cons (does a memset too) */
@@ -707,7 +703,7 @@ static lispval get_stmt_values
 	     (KNO_TRUEP(mergefn)))
       result = kno_init_slotmap(NULL,n_slots,kv);
     else if (!(KNO_APPLICABLEP(mergefn))) {
-      result = kno_type_error("applicable","mysql/get_stmt_values",mergefn);}
+      result = kno_type_error("applicable","mariadb/get_stmt_values",mergefn);}
     else {
       lispval tmp_slotmap = kno_init_slotmap(NULL,n_slots,kv);
       result = kno_apply(mergefn,1,&tmp_slotmap);
@@ -763,7 +759,7 @@ static int init_stmt_results
       if (outbound) u8_free(outbound);
       if (nullbuf) u8_free(nullbuf);
       if (metadata) mysql_free_result(metadata);
-      u8_seterr(MySQL_Error,"mysql/init_stmt_results",u8_strdup(errmsg));
+      u8_seterr(MySQL_Error,"mariadb/init_stmt_results",u8_strdup(errmsg));
       return -1;}
     while (i<n_cols) {
       mysqlproc_colnames[i]=kno_intern(fields[i].name);
@@ -1447,7 +1443,7 @@ static lispval applymysqlproc(kno_function fn,int n,kno_argvec args,int reconn)
 
 /* Initialization */
 
-static long long int mysql_initialized = 0;
+static long long int mariadb_initialized = 0;
 
 static struct KNO_SQLDB_HANDLER mysql_handler=
   {"mysql",NULL,NULL,NULL,NULL};
@@ -1469,16 +1465,18 @@ static void cleanup_thread_for_mysql()
   mysql_thread_end();
 }
 
-static lispval mysql_module;
+static void setup_mysql_compat(void);
 
-KNO_EXPORT int kno_init_mysql()
+static lispval mariadb_module;
+
+KNO_EXPORT int kno_init_mariadb()
 {
-  if (mysql_initialized) return 0;
+  if (mariadb_initialized) return 0;
 
   u8_register_threadinit(init_thread_for_mysql);
   u8_register_threadexit(cleanup_thread_for_mysql);
 
-  mysql_module = kno_new_cmodule("mysql",0,kno_init_mysql);
+  mariadb_module = kno_new_cmodule("mariadb",0,kno_init_mariadb);
 
   u8_init_mutex(&mysql_connect_lock);
 
@@ -1491,7 +1489,7 @@ KNO_EXPORT int kno_init_mysql()
 
   link_local_cprims();
 
-  mysql_initialized = u8_millitime();
+  mariadb_initialized = u8_millitime();
 
   boolean_symbol = kno_intern("boolean");
   merge_symbol = kno_intern("%merge");
@@ -1513,10 +1511,12 @@ KNO_EXPORT int kno_init_mysql()
   write_timeout_symbol = kno_intern("write-timeout");
   lazy_symbol = kno_intern("lazyprocs");
 
-  kno_finish_module(mysql_module);
+  setup_mysql_compat();
+
+  kno_finish_module(mariadb_module);
 
   kno_register_config
-    ("MYSQL:LAZYPROCS",
+    ("MARIADB:LAZYPROCS",
      "whether MYSQL should delay initializing dbprocs (statements)",
      kno_boolconfig_get,kno_boolconfig_set,
      &default_lazy_init);
@@ -1526,8 +1526,21 @@ KNO_EXPORT int kno_init_mysql()
   return 1;
 }
 
+static void setup_mysql_compat()
+{
+  kno_register_config
+    ("MYSQL:LAZYPROCS",
+     "whether MYSQL should delay initializing dbprocs (statements)",
+     kno_boolconfig_get,kno_boolconfig_set,
+     &default_lazy_init);
+  KNO_LINK_ALIAS("mysql/open",mariadb_open,mariadb_module);
+  KNO_LINK_ALIAS("mysql/refresh",mariadb_refresh,mariadb_module);
+  kno_add(mariadb_module,KNOSYM_MODULEID,kno_getsym("mysql"));
+  kno_register_module_x(kno_getsym("mysql"),mariadb_module,0);
+}
+
 static void link_local_cprims()
 {
-  KNO_LINK_PRIM("mysql/open",open_mysql,6,mysql_module);
-  KNO_LINK_PRIM("mysql/refresh",refresh_mysqldb,2,mysql_module);
+  KNO_LINK_PRIM("mariadb/open",mariadb_open,6,mariadb_module);
+  KNO_LINK_PRIM("mariadb/refresh",mariadb_refresh,2,mariadb_module);
 }

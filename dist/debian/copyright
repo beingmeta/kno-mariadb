@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: libu8
-Source: <url://example.com>
+Upstream-Name: kno-mariadb
+Source: <https://>
 
 Files: *
 Copyright: 2002-2020 beingmeta, inc
