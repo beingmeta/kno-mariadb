@@ -25,9 +25,9 @@
 #include <libu8/u8timefns.h>
 #include <libu8/u8crypto.h>
 
-#include <mariadb/mysql.h>
-#include <mariadb/errmsg.h>
-#include <mariadb/mysqld_error.h>
+#include <mysql.h>
+#include <errmsg.h>
+#include <mysqld_error.h>
 
 static lispval ssl_symbol, sslca_symbol, sslcert_symbol, sslkey_symbol, sslcadir_symbol;
 static lispval sslciphers_symbol, port_symbol, reconnect_symbol;
