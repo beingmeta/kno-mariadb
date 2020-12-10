@@ -117,8 +117,14 @@ dist/debian.built: mariadb.c makefile debian debian/changelog
 	touch $@
 
 dist/debian.signed: dist/debian.built
-	debsign --re-sign -k${GPGID} ../kno-mariadb_*.changes && \
-	touch $@
+	@if test "${GPGID}" = "none" || test -z "${GPGID}"; then  	\
+	  echo "Skipping debian signing";				\
+	  touch $@;							\
+	else 								\
+	  echo debsign --re-sign -k${GPGID} ../kno-mariadb_*.changes;	\
+	  debsign --re-sign -k${GPGID} ../kno-mariadb_*.changes && 	\
+	  touch $@;							\
+	fi;
 
 dist/debian.updated: dist/debian.signed
 	dupload -c ./dist/dupload.conf --nomail --to bionic ../kno-mariadb_*.changes && touch $@
