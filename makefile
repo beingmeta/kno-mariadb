@@ -49,7 +49,7 @@ default: ${PKG_NAME}.${libsuffix}
 build: ${PKG_NAME}.${libsuffix}
 
 mariadb.o: mariadb.c makefile
-	@$(CC) $(CFLAGS) -o $@ -c $<
+	@$(CC) $(CFLAGS) -D_FILEINFO="\"$(shell u8_fileinfo ./$< $(dirname $(pwd))/)\"" -o $@ -c $<
 	@$(MSG) CC "(MARIADB)" $@
 mariadb.so: mariadb.o
 	$(MKSO) $(LDFLAGS) -o $@ mariadb.o ${LDFLAGS}

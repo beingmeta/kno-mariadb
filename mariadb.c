@@ -362,9 +362,13 @@ static void recycle_mysqldb(struct KNO_SQLDB *c)
   mysql_close(dbp->mysqldb);
 }
 
-DEFPRIM2("mariadb/refresh",mariadb_refresh,KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
-	 "`(MARIADB/REFRESH *dbptr* *flags*)` **undocumented**",
-	 kno_sqldb_type,KNO_VOID,kno_any_type,KNO_VOID);
+
+KNO_DEFCPRIM("mariadb/refresh",mariadb_refresh,
+ KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
+ "`(MARIADB/REFRESH *dbptr* *flags*)` "
+ "**undocumented**",
+ "c",kno_sqldb_type,KNO_VOID,
+ "flags",kno_any_type,KNO_VOID)
 static lispval mariadb_refresh(lispval c,lispval flags)
 {
   struct KNO_MYSQL *dbp = (struct KNO_MYSQL *)c;
@@ -383,11 +387,17 @@ static lispval mariadb_refresh(lispval c,lispval flags)
 /* Everything but the hostname and dbname is optional.
    In theory, we could have the dbname be optional, but for now we'll
    require it.  */
-DEFPRIM6("mariadb/open",mariadb_open,KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
-	 "`(MARIADB/OPEN *host* *dbname* *colmap* *user* *pass* *opts*)` **undocumented**",
-	 kno_string_type,KNO_VOID,kno_string_type,KNO_VOID,
-	 kno_any_type,KNO_VOID,kno_string_type,KNO_VOID,
-	 kno_any_type,KNO_VOID,kno_any_type,KNO_VOID);
+
+KNO_DEFCPRIM("mariadb/open",mariadb_open,
+ KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
+ "`(MARIADB/OPEN *host* *dbname* *colmap* *user* *pass* *opts*)` "
+ "**undocumented**",
+ "hostname",kno_string_type,KNO_VOID,
+ "dbname",kno_string_type,KNO_VOID,
+ "colinfo",kno_any_type,KNO_VOID,
+ "user",kno_string_type,KNO_VOID,
+ "password",kno_any_type,KNO_VOID,
+ "options",kno_any_type,KNO_VOID)
 static lispval mariadb_open
 (lispval hostname,lispval dbname,lispval colinfo,
  lispval user,lispval password,
@@ -1541,6 +1551,6 @@ static void setup_mysql_compat()
 
 static void link_local_cprims()
 {
-  KNO_LINK_PRIM("mariadb/open",mariadb_open,6,mariadb_module);
-  KNO_LINK_PRIM("mariadb/refresh",mariadb_refresh,2,mariadb_module);
+  KNO_LINK_CPRIM("mariadb/open",mariadb_open,6,mariadb_module);
+  KNO_LINK_CPRIM("mariadb/refresh",mariadb_refresh,2,mariadb_module);
 }
