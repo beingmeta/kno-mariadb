@@ -367,8 +367,8 @@ KNO_DEFCPRIM("mariadb/refresh",mariadb_refresh,
  KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
  "`(MARIADB/REFRESH *dbptr* *flags*)` "
  "**undocumented**",
- "c",kno_sqldb_type,KNO_VOID,
- "flags",kno_any_type,KNO_VOID)
+	     {"c",kno_sqldb_type,KNO_VOID},
+	     {"flags",kno_any_type,KNO_VOID})
 static lispval mariadb_refresh(lispval c,lispval flags)
 {
   struct KNO_MYSQL *dbp = (struct KNO_MYSQL *)c;
@@ -392,12 +392,12 @@ KNO_DEFCPRIM("mariadb/open",mariadb_open,
  KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
  "`(MARIADB/OPEN *host* *dbname* *colmap* *user* *pass* *opts*)` "
  "**undocumented**",
- "hostname",kno_string_type,KNO_VOID,
- "dbname",kno_string_type,KNO_VOID,
- "colinfo",kno_any_type,KNO_VOID,
- "user",kno_string_type,KNO_VOID,
- "password",kno_any_type,KNO_VOID,
- "options",kno_any_type,KNO_VOID)
+	     {"hostname",kno_string_type,KNO_VOID},
+	     {"dbname",kno_string_type,KNO_VOID},
+	     {"colinfo",kno_any_type,KNO_VOID},
+	     {"user",kno_string_type,KNO_VOID},
+	     {"password",kno_any_type,KNO_VOID},
+	     {"options",kno_any_type,KNO_VOID})
 static lispval mariadb_open
 (lispval hostname,lispval dbname,lispval colinfo,
  lispval user,lispval password,
