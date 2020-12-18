@@ -365,7 +365,6 @@ static void recycle_mysqldb(struct KNO_SQLDB *c)
 
 KNO_DEFCPRIM("mariadb/refresh",mariadb_refresh,
  KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
- "`(MARIADB/REFRESH *dbptr* *flags*)` "
  "**undocumented**",
 	     {"c",kno_sqldb_type,KNO_VOID},
 	     {"flags",kno_any_type,KNO_VOID})
@@ -390,7 +389,6 @@ static lispval mariadb_refresh(lispval c,lispval flags)
 
 KNO_DEFCPRIM("mariadb/open",mariadb_open,
  KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
- "`(MARIADB/OPEN *host* *dbname* *colmap* *user* *pass* *opts*)` "
  "**undocumented**",
 	     {"hostname",kno_string_type,KNO_VOID},
 	     {"dbname",kno_string_type,KNO_VOID},
