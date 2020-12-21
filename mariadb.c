@@ -1175,7 +1175,8 @@ static lispval applymysqlproc(kno_function fn,int n,kno_argvec args,int reconn)
       u8_unlock_mutex(&(dbproc->mysqlproc_lock));
       if (n<n_params)
 	return kno_err(kno_TooFewArgs,"applymysqlproc",fn->fcn_name,KNO_VOID);
-      else return kno_err(kno_TooManyArgs,"applymysqlproc",fn->fcn_name,KNO_VOID);}
+      else return kno_err(kno_TooManyArgs,"applymysqlproc",
+			  fn->fcn_name,KNO_VOID);}
 
     if (n_params>4) argbuf = u8_alloc_n(n_params,lispval);
     /* memset(argbuf,0,LISPVEC_BYTELEN(n_params)); */
