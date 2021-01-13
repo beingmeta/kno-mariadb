@@ -1,3 +1,9 @@
+kno-mariadb (2101.2) stable; urgency=medium
+
+  * Update for kno 2101
+
+ -- Ken Haase <kh@beingmeta.com>  Fri, 12 Jan 2021 15:27:33 +0000
+
 kno-mariadb (2007.2) stable; urgency=medium
 
   * Change to mariadb
