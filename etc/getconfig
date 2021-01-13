@@ -1,0 +1,9 @@
+#!/bin/sh
+MARDIDB_CONFIG=$(which mariadb_config 2> /dev/null)
+export PKG_CONFIG_PATH=./etc/pkgconfig/:${PKG_CONFIG_PATH}
+if [ -x "${MARDIDB_CONFIG}" ]; then
+   ${MARDIDB_CONFIG} $*
+elif pkg-config libmariadb $* 2>&1 > /dev/null; then
+    pkg-config libmariadb $*;
+else echo;
+fi;
