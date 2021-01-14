@@ -6,7 +6,7 @@ Standards-Version: 3.9.4
 Section: libs
 Homepage: http://www.beingmeta.com/
 
-Package: kno-mysql
+Package: kno-mariadb
 Section: libdevel
 Architecture: any
 Depends: kno-core, libmariadb3
