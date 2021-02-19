@@ -363,7 +363,7 @@ static void recycle_mysqldb(struct KNO_SQLDB *c)
 }
 
 
-KNO_DEFCPRIM("mariadb/refresh",mariadb_refresh,
+DEFC_PRIM("mariadb/refresh",mariadb_refresh,
  KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
  "**undocumented**",
 	     {"c",kno_sqldb_type,KNO_VOID},
@@ -387,7 +387,7 @@ static lispval mariadb_refresh(lispval c,lispval flags)
    In theory, we could have the dbname be optional, but for now we'll
    require it.  */
 
-KNO_DEFCPRIM("mariadb/open",mariadb_open,
+DEFC_PRIM("mariadb/open",mariadb_open,
  KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
  "**undocumented**",
 	     {"hostname",kno_string_type,KNO_VOID},
