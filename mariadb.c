@@ -3,6 +3,7 @@
 /* mariadb.c
    This implements Kno bindings to mariadb.
    Copyright (C) 2007-2019 beingmeta, inc.
+   Copyright (C) 2020-2021 beingmeta, LLC
 */
 
 #ifndef _FILEINFO
@@ -364,10 +365,10 @@ static void recycle_mysqldb(struct KNO_SQLDB *c)
 
 
 DEFC_PRIM("mariadb/refresh",mariadb_refresh,
- KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
- "**undocumented**",
-	     {"c",kno_sqldb_type,KNO_VOID},
-	     {"flags",kno_any_type,KNO_VOID})
+	  KNO_MAX_ARGS(2)|KNO_MIN_ARGS(1),
+	  "**undocumented**",
+	  {"c",kno_sqldb_type,KNO_VOID},
+	  {"flags",kno_any_type,KNO_VOID})
 static lispval mariadb_refresh(lispval c,lispval flags)
 {
   struct KNO_MYSQL *dbp = (struct KNO_MYSQL *)c;
@@ -388,14 +389,14 @@ static lispval mariadb_refresh(lispval c,lispval flags)
    require it.  */
 
 DEFC_PRIM("mariadb/open",mariadb_open,
- KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
- "**undocumented**",
-	     {"hostname",kno_string_type,KNO_VOID},
-	     {"dbname",kno_string_type,KNO_VOID},
-	     {"colinfo",kno_any_type,KNO_VOID},
-	     {"user",kno_string_type,KNO_VOID},
-	     {"password",kno_any_type,KNO_VOID},
-	     {"options",kno_any_type,KNO_VOID})
+	  KNO_MAX_ARGS(6)|KNO_MIN_ARGS(1),
+	  "**undocumented**",
+	  {"hostname",kno_string_type,KNO_VOID},
+	  {"dbname",kno_string_type,KNO_VOID},
+	  {"colinfo",kno_any_type,KNO_VOID},
+	  {"user",kno_string_type,KNO_VOID},
+	  {"password",kno_any_type,KNO_VOID},
+	  {"options",kno_any_type,KNO_VOID})
 static lispval mariadb_open
 (lispval hostname,lispval dbname,lispval colinfo,
  lispval user,lispval password,
