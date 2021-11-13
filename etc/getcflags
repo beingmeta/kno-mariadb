@@ -1,0 +1,16 @@
+#!/bin/sh
+
+PROBE_NAMES=libmariadb
+DEFAULT_CFLAGS=
+
+if which pkg-config 1>/dev/null 2>/dev/null; then
+    for name in ${PROBE_NAMES}; do
+	if pkg-config --exists ${name} 1>/dev/null 2>/dev/null; then
+	    pkg-config --cflags ${name} 2>/dev/null;
+	    exit;
+	fi;
+    done;
+elif which mariadb_config 1>/dev/null 2>/dev/null; then
+    mariadb_config --cflags;
+fi;
+echo ${DEFAULT_CFLAGS};

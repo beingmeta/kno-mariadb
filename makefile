@@ -1,53 +1,40 @@
+PKGNAME	          = mariadb # Edit to adapt
+LIBNAME	          = mariadb
 KNOCONFIG         = knoconfig
 KNOBUILD          = knobuild
 
 prefix		::= $(shell ${KNOCONFIG} prefix)
 libsuffix	::= $(shell ${KNOCONFIG} libsuffix)
-KNO_CFLAGS	::= -I. -fPIC $(shell ${KNOCONFIG} cflags)
-KNO_LDFLAGS	::= -fPIC $(shell ${KNOCONFIG} ldflags)
-KNO_LIBS	::= $(shell ${KNOCONFIG} libs)
-MARIADB_CFLAGS    ::= $(shell etc/getconfig --cflags)
-MARIADB_LDFLAGS   ::= $(shell etc/getconfig --libs)
-INIT_CFLAGS     ::= ${CFLAGS}
-INIT_LDFLAGS    ::= ${LDFLAGS}
 CMODULES	::= $(DESTDIR)$(shell ${KNOCONFIG} cmodules)
-LIBS		::= $(shell ${KNOCONFIG} libs)
-LIB		::= $(shell ${KNOCONFIG} lib)
-INCLUDE		::= $(shell ${KNOCONFIG} include)
 KNO_VERSION	::= $(shell ${KNOCONFIG} version)
 KNO_MAJOR	::= $(shell ${KNOCONFIG} major)
 KNO_MINOR	::= $(shell ${KNOCONFIG} minor)
-PKG_VERSION     ::= $(shell cat ./version)
-PKG_MAJOR       ::= $(shell cat ./version | cut -d. -f1)
-FULL_VERSION    ::= ${KNO_MAJOR}.${KNO_MINOR}.${PKG_VERSION}
-PATCHLEVEL      ::= $(shell u8_gitpatchcount ./version)
-PATCH_VERSION   ::= ${FULL_VERSION}-${PATCHLEVEL}
+PKG_VERSION     ::= $(shell u8_gitversion etc/mod_version)
+PKG_MAJOR       ::= $(shell echo ${PKG_VERSION} | cut -d. -f1)
+PKG_MINOR       ::= $(shell echo ${PKG_VERSION} | cut -d. -f2)
+PKG_PATCHLEVEL  ::= $(shell echo ${PKG_VERSION} | cut -d. -f3)
+FULL_VERSION    ::= ${KNO_MAJOR}.${PKG_VERSION}
 
-PKG_NAME	::= mariadb
-DPKG_NAME	::= ${PKG_NAME}_${PATCH_VERSION}
+INIT_CFLAGS  	::= ${CFLAGS}
+INIT_LDFLAGS 	::= ${LDFLAGS}
+KNO_CFLAGS	::= -I. -fPIC $(shell ${KNOCONFIG} cflags)
+KNO_LDFLAGS	::= -fPIC $(shell ${KNOCONFIG} ldflags)
+KNO_LIBS	::= $(shell ${KNOCONFIG} libs)
+MODULE_CFLAGS   ::= $(shell ./etc/getcflags $(LIBNAME))
+MODULE_LDFLAGS  ::= $(shell ./etc/getlibflags $(LIBNAME))
+SUDO  		::= $(shell which sudo)
 
-SUDO            ::= $(shell which sudo)
-
-CFLAGS		  = ${INIT_CFLAGS} ${MARIADB_CFLAGS} ${KNO_CFLAGS} 
-LDFLAGS		  = ${INIT_LDFLAGS} ${MARIADB_LDFLAGS} ${KNO_LDFLAGS}
+CFLAGS		  = ${INIT_CFLAGS} ${MODULE_CFLAGS} ${KNO_CFLAGS} ${XCFLAGS}
+LDFLAGS		  = ${INIT_LDFLAGS} ${MODULE_LDFLAGS} ${KNO_LDFLAGS} ${XLDFLAGS}
 MKSO		  = $(CC) -shared $(CFLAGS) $(LDFLAGS) $(LIBS)
-MSG		  = echo
 SYSINSTALL        = /usr/bin/install -c
+MSG		  = echo
 MACLIBTOOL	  = $(CC) -dynamiclib -single_module -undefined dynamic_lookup \
 			$(LDFLAGS)
+# Meta targets
 
-GPGID           ::= ${OVERRIDE_GPGID:-FE1BC737F9F323D732AA26330620266BE5AFF294}
-CODENAME	::= $(shell ${KNOCONFIG} codename)
-REL_BRANCH	::= $(shell ${KNOBUILD} getbuildopt REL_BRANCH current)
-REL_STATUS	::= $(shell ${KNOBUILD} getbuildopt REL_STATUS stable)
-REL_PRIORITY	::= $(shell ${KNOBUILD} getbuildopt REL_PRIORITY medium)
-ARCH            ::= $(shell ${KNOBUILD} getbuildopt BUILD_ARCH || uname -m)
-APKREPO         ::= $(shell ${KNOBUILD} getbuildopt APKREPO /srv/repo/kno/apk)
-APK_ARCH_DIR      = ${APKREPO}/staging/${ARCH}
-RPMDIR		  = dist
-
-default: ${PKG_NAME}.${libsuffix}
-build: ${PKG_NAME}.${libsuffix}
+default: ${LIBNAME}.${libsuffix}
+build: ${LIBNAME}.${libsuffix}
 
 mariadb.o: mariadb.c makefile
 	@$(CC) $(CFLAGS) -D_FILEINFO="\"$(shell u8_fileinfo ./$< $(dirname $(pwd))/)\"" -o $@ -c $<
@@ -66,6 +53,8 @@ mariadb.dylib: mariadb.c makefile
 
 TAGS: mariadb.c
 	etags -o TAGS mariadb.c
+
+# Other targets
 
 ${CMODULES}:
 	install -d $@
@@ -91,57 +80,38 @@ fresh:
 gitup gitup-trunk:
 	git checkout trunk && git pull
 
-# Debian packaging
+buildinfo:
+	@echo "PKGNAME=$(PKGNAME) LIBNAME=$(LIBNAME)";
+	@echo "  PKG_VERSION=$(PKG_VERSION)";
+	@echo "  FULL_VERSION=$(FULL_VERSION)";
+	@echo "  CFLAGS=$(CFLAGS)";
+	@echo "  LDFLAGS=$(LDFLAGS)";
+	@echo "  libsuffix=$(libsuffix)";
+	@echo "  prefix=$(prefix)";
+	@echo "  MKSO=$(MKSO)";
+	@echo "  MACLIBTOOL=$(MACLIBTOOL)";
+	@echo "  SYSINSTALL=$(SYSINSTALL)";
 
-DEBFILES=changelog.base control.base compat copyright dirs docs install
-
-debian: dist/debian/compat dist/debian/control.base dist/debian/changelog.base
-	rm -rf debian
-	cp -r dist/debian debian
-	cd debian; chmod a-x ${DEBFILES}
-
-debian/compat: dist/debian/compat
-	rm -rf debian
-	cp -r dist/debian debian
-
-debian/changelog: debian/compat dist/debian/changelog.base
-	cat dist/debian/changelog.base | \
-		u8_debchangelog kno-${PKG_NAME} ${CODENAME} ${PATCH_VERSION} \
-			${REL_BRANCH} ${REL_STATUS} ${REL_PRIORITY} \
-	    > $@.tmp
-	if test ! -f debian/changelog; then \
-	  mv debian/changelog.tmp debian/changelog; \
-	elif diff debian/changelog debian/changelog.tmp 2>&1 > /dev/null; then \
-	  mv debian/changelog.tmp debian/changelog; \
-	else rm debian/changelog.tmp; fi
-debian/control: debian/compat dist/debian/control.base
-	u8_xsubst debian/control dist/debian/control.base "KNO_MAJOR" "${KNO_MAJOR}"
-
-dist/debian.built: makefile debian/changelog debian/control
-	dpkg-buildpackage -sa -us -uc -b -rfakeroot && \
-	touch $@
-
-dist/debian.signed: dist/debian.built
-	@if test "${GPGID}" = "none" || test -z "${GPGID}"; then  	\
-	  echo "Skipping debian signing";				\
-	  touch $@;							\
-	else 								\
-	  echo debsign --re-sign -k${GPGID} ../kno-${PKG_NAME}_*.changes;	\
-	  debsign --re-sign -k${GPGID} ../kno-${PKG_NAME}_*.changes && 	\
-	  touch $@;							\
-	fi;
-
-deb debs dpkg dpkgs: dist/debian.signed
-
-debfresh: clean debclean
-	rm -rf debian
-	make dist/debian.signed
-
-debinstall: dist/debian.signed
-	${SUDO} dpkg -i ../kno-${PKG_NAME}_*.deb
-
-debclean: clean
-	rm -rf ../kno-${PKG_NAME}-* debian dist/debian.*
+all_buildinfo: buildinfo
+	@echo "FULL_VERSION=$(FULL_VERSION)";
+	@echo "  PKG_VERSION=$(PKG_VERSION)";
+	@echo "  KNO_VERSION=$(KNO_VERSION)";
+	@echo "  PKG_MAJOR=$(PKG_MAJOR)";
+	@echo "  PKG_MINOR=$(PKG_MINOR)";
+	@echo "  PKG_PATCHLEVEL=$(PKG_PATCHLEVEL)";
+	@echo "  KNO_MAJOR=$(KNO_MAJOR)";
+	@echo "  KNO_MINOR=$(KNO_MINOR)";
+	@echo "KNOCONFIG=$(KNOCONFIG)";
+	@echo "  KNOBUILD=$(KNOBUILD)";
+	@echo "  CMODULES=$(CMODULES)";
+	@echo "  INIT_CFLAGS=$(INIT_CFLAGS)";
+	@echo "  INIT_LDFLAGS=$(INIT_LDFLAGS)";
+	@echo "  KNO_CFLAGS=$(KNO_CFLAGS)";
+	@echo "  KNO_LDFLAGS=$(KNO_LDFLAGS)";
+	@echo "  KNO_LIBS=$(KNO_LIBS)";
+	@echo "  MODULE_CFLAGS=$(MODULE_CFLAGS)";
+	@echo "  MODULE_LDFLAGS=$(MODULE_LDFLAGS)";
+	@echo "  SUDO=$(SUDO)";
 
 # RPM packaging
 
