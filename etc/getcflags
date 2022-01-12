@@ -10,7 +10,8 @@ if which pkg-config 1>/dev/null 2>/dev/null; then
 	    exit;
 	fi;
     done;
-elif which mariadb_config 1>/dev/null 2>/dev/null; then
+fi;
+if which mariadb_config 1>/dev/null 2>/dev/null; then
     mariadb_config --cflags;
 fi;
 echo ${DEFAULT_CFLAGS};
