@@ -1121,15 +1121,15 @@ static void recycle_mysqlproc(struct KNO_SQLPROC *c)
 
 /* Actually calling a MYSQL proc */
 
-static lispval applymysqlproc(kno_function f,int n,kno_argvec args,int reconn);
+static lispval applymysqlproc(kno_proc f,int n,kno_argvec args,int reconn);
 
 static lispval callmysqlproc
 (kno_stack stack,lispval fn,int n,kno_argvec args)
 {
-  return applymysqlproc((kno_function)fn,n,args,7);
+  return applymysqlproc((kno_proc)fn,n,args,7);
 }
 
-static lispval applymysqlproc(kno_function fn,int n,kno_argvec args,int reconn)
+static lispval applymysqlproc(kno_proc fn,int n,kno_argvec args,int reconn)
 {
   struct KNO_MYSQL_PROC *dbproc = (struct KNO_MYSQL_PROC *)fn;
   struct KNO_MYSQL *dbp=
